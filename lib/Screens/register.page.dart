@@ -1,4 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class RegisterPage extends StatefulWidget {
   RegisterPage({super.key});
@@ -19,26 +22,80 @@ class _LoginPageState extends State<RegisterPage> {
   //variable pour mdp
   bool _passVariable = false;
 
-  // methode validator
-  String? emailValidator(String? value) {
-    if (value == null || value.isEmpty) return "Please enter your email";
-    final emailpattern = r'^[^@]+@[^@]+\.[^@]+';
-    final regExp = RegExp(emailpattern);
-    if (!regExp.hasMatch(value)) return "Email inavlide";
-    return null;
-  }
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  String? passValidator(String? value) {
-    if (value == null || value.isEmpty) return "Please enter your email";
-    if (value.length < 6)
-      return "Taille de mot de passe doit depasser 6 caracteres";
-  }
+  // methode validator
+  // String? emailValidator(String? value) {
+  //   if (value == null || value.isEmpty) return "Please enter your email";
+  //   final emailpattern = r'^[^@]+@[^@]+\.[^@]+';
+  //   final regExp = RegExp(emailpattern);
+  //   if (!regExp.hasMatch(value)) return "Email inavlide";
+  //   return null;
+  // }
+  //
+  // String? passValidator(String? value) {
+  //   if (value == null || value.isEmpty) return "Please enter your email";
+  //   if (value.length < 6)
+  //     return "Taille de mot de passe doit depasser 6 caracteres";
+  // }
 
   String? confirmpassValidator(String? value) {
     if (value == null || value.isEmpty) return "Please enter your email";
     if (value != passcontroller.text) return "Password does not match";
     return null;
   }
+
+  //Methode d'authentification/inscription avec firebase
+  Future SignUp() async {
+    try {
+      UserCredential userCredential =
+      await _auth.createUserWithEmailAndPassword(
+          email: emailcontroller.text.trim(),
+          password: passcontroller.text.trim());
+
+      if (userCredential.user != null)
+        Navigator.pushReplacementNamed(context, '/login');
+    } on FirebaseAuthException catch (e) {
+      //mdp moins de 6caracteres
+      if (e.code.contains("weak-password")) {
+        Fluttertoast.showToast(
+          msg:
+          "Le mot de passe est trop faible.Doit contenir au moin 6 caracteres",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
+
+        //Format invalide de l'email
+        if (e.code.contains("invalid-email")) {
+          Fluttertoast.showToast(
+            msg: "Votre email n'a pas un format valide",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+            fontSize: 16.0,
+          );
+
+          //Adresse deja utilisé
+          if (e.code.contains("email-already-in-use")) {
+            Fluttertoast.showToast(
+              msg: "Cette adresse mail est deja utilisée",
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.BOTTOM,
+              backgroundColor: Colors.red,
+              textColor: Colors.white,
+              fontSize: 16.0,
+            );
+          }
+          print(e);
+        }
+      }
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +116,7 @@ class _LoginPageState extends State<RegisterPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Image.asset("images/img1.jpg", height: 100, width: 100),
+                  Image.asset("images/img1.PNG", height: 100, width: 100),
                   SizedBox(height: 20),
                   Text("Hello Back to the home Page",
                       textAlign: TextAlign.center,
@@ -76,7 +133,7 @@ class _LoginPageState extends State<RegisterPage> {
                           color: Colors.pink,
                         )),
                     keyboardType: TextInputType.emailAddress,
-                    validator: emailValidator,
+                    //validator: emailValidator,
                   ),
                   SizedBox(height: 20),
                   TextFormField(
@@ -102,7 +159,7 @@ class _LoginPageState extends State<RegisterPage> {
                                 : Icons.visibility_off))),
 
                     keyboardType: TextInputType.emailAddress,
-                    validator: passValidator,
+                    //validator: passValidator,
                   ),
                   SizedBox(
                     height: 20,
@@ -130,7 +187,7 @@ class _LoginPageState extends State<RegisterPage> {
                                 : Icons.visibility_off))),
 
                     keyboardType: TextInputType.emailAddress,
-                    validator: passValidator,
+                    //validator: passValidator,
                   ),
                   SizedBox(
                     height: 20,
@@ -145,7 +202,7 @@ class _LoginPageState extends State<RegisterPage> {
                         }
                       },
                       child: Text(
-                        "Login",
+                        "Register",
                         style:
                         TextStyle(fontSize: 30, color: Colors.deepPurple),
                       )),
